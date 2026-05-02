@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+bms_probe.egg-info/
+build/
+dist/
+
+logs/*.log
+logs/*.raw.log
+reports/*.json
+reports/*.txt

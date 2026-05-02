@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bms-probe"
+version = "0.1.1"
+description = "Safe read-only BMS protocol probe MVP"
+requires-python = ">=3.10"
+dependencies = ["pyserial>=3.5"]
+
+[project.scripts]
+bms-probe = "main_cli:main"
+
+[tool.setuptools]
+packages = ["core", "transport", "protocols"]
+py-modules = ["main_cli", "app_gui"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
