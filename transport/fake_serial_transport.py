@@ -38,3 +38,15 @@ class FakeSerialTransport:
             return b""
         value = self.responses.popleft()
         return b"" if value is None else value
+
+    def actual_settings(self) -> dict[str, object]:
+        if not self.opened or self.settings is None:
+            raise RuntimeError("Serial port is not open")
+        return {
+            "port": self.port,
+            "baudrate": self.settings.baudrate,
+            "bytesize": self.settings.bytesize,
+            "parity": self.settings.parity,
+            "stopbits": self.settings.stopbits,
+            "timeout": self.settings.timeout,
+        }
