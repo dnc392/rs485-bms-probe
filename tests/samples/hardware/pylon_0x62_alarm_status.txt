@@ -1,0 +1,4 @@
+Source: Captured from real JK BMS in Pylon LV / Protocol 014 compatible mode over RS485 9600 8N1.
+Probe: read_system_alarm_info / 0x62
+TX: ~201246620000FDA9\r
+RX: ~20024600800800000000FC22\r

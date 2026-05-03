@@ -25,6 +25,11 @@ from transport.port_list import list_serial_ports
 from transport.serial_transport import SerialPortError, SerialTransport
 
 
+BASE_DIR = Path(__file__).resolve().parent
+REPORTS_DIR = BASE_DIR / "reports"
+LOGS_DIR = BASE_DIR / "logs"
+
+
 def profiles_map():
     return {p.id: p for p in get_all_profiles()}
 
@@ -153,8 +158,10 @@ def run_cli(
     args: argparse.Namespace,
     transport_factory: Callable[[], SerialTransport] = SerialTransport,
     list_ports_func: Callable[[], list[str]] = list_serial_ports,
-    log_dir: Path = Path("logs"),
+    log_dir: Path | None = None,
 ) -> int:
+    if log_dir is None:
+        log_dir = LOGS_DIR
     pmap = profiles_map()
     if args.list_ports:
         print("\n".join(list_ports_func()))
@@ -234,13 +241,13 @@ def run_cli(
             raise ValueError(f"Invalid profile id: {exc.args[0]}") from exc
         found = False
         for profile in selected:
-            result = run_active_probe(SerialTransport(), args.port, profile, include_unverified=args.include_unverified)
-            print(f"{profile.id}: score={result.score} status={result.status}")
-            out = Path("bms_probe/reports")
+            result = run_active_probe(transport_factory(), args.port, profile, include_unverified=args.include_unverified)
+            print(f"{profile.id}: score={result.score} raw_score={result.raw_score} status={result.status}")
+            out = REPORTS_DIR
             out.mkdir(parents=True, exist_ok=True)
             save_json(result, out / f"{profile.id}.json")
             save_txt(result, out / f"{profile.id}.txt")
-            save_raw(result, Path("bms_probe/logs") / f"{profile.id}.raw.log")
+            save_raw(result, LOGS_DIR / f"{profile.id}.raw.log")
             found = found or result.detected
         if not found:
             print("No protocol detected under tested profiles. Check physical interface, wake state, pinout, baudrate, address, and BMS app settings.")

@@ -38,6 +38,7 @@ class ScanResult:
     port: str
     serial_settings: dict[str, Any]
     score: int
+    raw_score: int
     detected: bool
     status: str
     reasons: list[str]

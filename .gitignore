@@ -2,11 +2,12 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-bms_probe.egg-info/
+*.egg-info/
 build/
 dist/
 
 logs/*.log
 logs/*.raw.log
+logs/*.bin
 reports/*.json
 reports/*.txt

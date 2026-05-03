@@ -51,8 +51,8 @@ def test_valid_response_increases_score_and_noise_is_parsed():
     result = run_active_probe(transport=transport, port="FAKE0", profile=profile)
 
     assert result.score < 0  # includes corrupted + timeout penalties
-    assert any("prefix matched" in r for r in result.reasons)
-    assert any("prefix mismatch" in r for r in result.reasons)
+    assert any("expected_prefix_ok" in r for r in result.reasons)
+    assert any("expected_prefix_mismatch" in r for r in result.reasons)
 
 
 def test_timeout_creates_warning_and_no_crash():

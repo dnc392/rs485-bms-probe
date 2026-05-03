@@ -25,7 +25,7 @@ def run_active_probe(
     profile: ProtocolProfile,
     include_unverified: bool = False,
 ) -> ScanResult:
-    score = 0
+    raw_score = 0
     reasons: list[str] = []
     warnings: list[str] = []
     decoded: dict = {}
@@ -33,6 +33,8 @@ def run_active_probe(
     raw_rx: list[str] = []
     skipped_probes: list[dict[str, str]] = []
     had_timeout = False
+    had_checksum_invalid = False
+    had_sanity_failed = False
 
     settings = profile.serial_candidates[0]
     transport.open(port, settings)
@@ -52,7 +54,7 @@ def run_active_probe(
             frames = profile.split_frames(rx)
             if not frames:
                 had_timeout = True
-                score -= 50
+                raw_score -= 50
                 timeout_reason = f"{probe.name}: timeout/no frame"
                 reasons.append(timeout_reason)
                 warnings.append(timeout_reason)
@@ -60,15 +62,26 @@ def run_active_probe(
             for frame in frames:
                 raw_rx.append(frame.hex(" "))
                 v = profile.validate_response(probe, frame)
-                score += v.score_delta
+                raw_score += v.score_delta
                 if elapsed <= probe.timeout_ms:
-                    score += 10
+                    raw_score += 10
                     reasons.append(f"{probe.name}: within timeout")
                 reasons.extend([f"{probe.name}: {r}" for r in v.reasons])
+                if "checksum_invalid" in v.reasons:
+                    had_checksum_invalid = True
+                    warnings.append(f"{probe.name}: checksum_invalid")
+                if "decoded_sanity_failed" in v.reasons:
+                    had_sanity_failed = True
+                    warnings.append(f"{probe.name}: decoded_sanity_failed")
+                if not v.ok:
+                    warnings.append(f"{probe.name}: validation failed")
                 decoded[probe.name] = v.decoded
     finally:
         transport.close()
 
+    score = min(raw_score, 100)
+    if (had_checksum_invalid or had_sanity_failed) and score >= 80:
+        score = 79
     status = _status_from_score(score, had_timeout)
     return ScanResult(
         protocol_id=profile.id,
@@ -76,6 +89,7 @@ def run_active_probe(
         port=port,
         serial_settings=settings.__dict__,
         score=score,
+        raw_score=raw_score,
         detected=detected_from_score(score),
         status=status,
         reasons=reasons,

@@ -162,3 +162,30 @@ def test_runtime_error_is_reported_as_internal(monkeypatch, capsys):
     assert code == 1
     assert "Internal error: broken invariant" in out
     assert "COM port busy or access denied" not in out
+
+
+def test_scan_report_paths_do_not_depend_on_cwd(monkeypatch, tmp_path: Path):
+    output_base = tmp_path / "package_dir"
+    reports_dir = output_base / "reports"
+    logs_dir = output_base / "logs"
+    unrelated_cwd = tmp_path / "unrelated_cwd"
+    unrelated_cwd.mkdir()
+
+    monkeypatch.setattr(main_cli, "REPORTS_DIR", reports_dir)
+    monkeypatch.setattr(main_cli, "LOGS_DIR", logs_dir)
+    monkeypatch.chdir(unrelated_cwd)
+
+    transport = FakeSerialTransport(responses=[PYLON_RESPONSE, PYLON_RESPONSE, PYLON_RESPONSE])
+
+    code = main_cli.run_cli(
+        _args(["--scan", "--port", "COM3", "--profiles", "pylon_lv_rs485"]),
+        transport_factory=lambda: transport,
+        list_ports_func=lambda: ["COM3"],
+    )
+
+    assert code == 0
+    assert reports_dir.is_dir()
+    assert logs_dir.is_dir()
+    assert (reports_dir / "pylon_lv_rs485.json").is_file()
+    assert (reports_dir / "pylon_lv_rs485.txt").is_file()
+    assert (logs_dir / "pylon_lv_rs485.raw.log").is_file()
