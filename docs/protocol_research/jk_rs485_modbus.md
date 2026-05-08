@@ -1,0 +1,141 @@
+# JK BMS RS485 Modbus V1.0 research plan
+
+Status: research-only documentation plus inactive implementation plan. This file
+does not define an active scan profile.
+
+## Target menu modes
+
+- `001 JK BMS RS485 Modbus V1.0`
+- `013 (9600) JK BMS RS485 Modbus V1.0`
+
+Working hypothesis:
+
+- `013` is the forced-9600 variant of the same JK RS485 Modbus protocol family.
+- `001` may depend on device configuration/default baud. The V1.1 PDF lists
+  115200 8N1, while the JK menu exposes a separate 9600 option as `013`.
+- Treat baud as UNKNOWN until verified on hardware for the exact BMS, port, and
+  selected menu mode.
+
+## Sources checked
+
+- Local: `docs/protocol_research/jk_protocol_modes_matrix.md`.
+- Local requested source `docs/protocol_research/donor_projects.md`: not present
+  in this checkout on 2026-05-08.
+- `syssi/esphome-jk-bms`: `docs/pb2a16s20p/BMS RS485 Modbus V1.1.pdf` exists in
+  the repository. The same V1.1 protocol text/register map was also readable
+  through an indexed PDF mirror titled `Jikong BMS RS485 Modbus general protocol
+  (V1.1)`.
+- Official JK/Jikong download pages checked on 2026-05-08 expose RS485 protocol
+  V2.0 downloads, but the requested `001 ... V1.0` PDF was not found there in
+  the accessible page text.
+- `phinix-org/Multiple-JK-BMS-by-Modbus-RS485` README and docs.
+
+## Physical interface cautions
+
+- Do not assume RS485-1, RS485-2, UART TTL, LCD, GPS, CAN, or inverter ports are
+  interchangeable.
+- Phinix notes separate RJ485-1/UART1, UART2, and CAN protocol menus and warn
+  that some documents/manuals describe ports incorrectly.
+- UART2 address `0x00` can put the BMS into master/parallel behavior. Do not
+  blindly query address 0 on an unknown setup.
+- Test slave address 1 first. Address 0 is not a safe default.
+
+## Function code policy
+
+Project allowlist: FC03/FC04 only.
+
+Allowed for this inactive implementation:
+
+- FC03 read holding register.
+- FC04 read input register as a read-only class only. FC04 is allowed by tooling
+  policy but is not currently source-confirmed as a JK V1.0/V1.1 command.
+
+Forbidden:
+
+- FC05/FC06/FC0F/FC10.
+- All write/control actions, including calibration, shutdown, sleep/wake,
+  factory mode, charge/discharge enable, balance enable, address changes, and
+  bulk-download/write-trigger methods.
+
+Source note: the V1.1 protocol text defines function `03H` for read register and
+`10H` for write register. Phinix also states JK-BMS support only `0x03` read and
+`0x10` write multiple registers. This project must implement only read requests.
+
+## Framing and CRC
+
+- Transport: Modbus RTU style binary frame.
+- Request layout: slave id, function code, start register high/low, quantity
+  high/low, CRC16 Modbus low byte first.
+- CRC: CRC16 Modbus, initial value `0xFFFF`, polynomial `0xA001`, appended little
+  endian.
+- Slave id policy: valid range 1..247; first hardware test uses slave id 1.
+
+## Register map references
+
+Source-confirmed read-only areas from the V1.1 map and Phinix register summary:
+
+- `0x1200 + 0x0000`: `CellVol0`, UINT16, R, mV.
+- `0x1200 + 0x0000..0x003E`: `CellVol0..CellVol31`, UINT16, R, mV.
+- `0x1200 + 0x008A`: `TempMos`, INT16, R, 0.1 C.
+- `0x1200 + 0x0090`: `BatVol`, UINT32, R, mV.
+- `0x1200 + 0x0098`: `BatCurrent`, INT32, R, mA.
+- `0x1200 + 0x009C..0x009E`: `TempBat1..TempBat2`, INT16, R, 0.1 C.
+- `0x1200 + 0x00A0`: alarm/status bitfield, UINT32, R.
+- `0x1200 + 0x00A6`: `BalanSta` and `SOCStateOfcharge`, UINT8/UINT8, R.
+- `0x1400 + 0x0000`: `ManufacturerDeviceID`, ASCII 16, R.
+- `0x1400 + 0x0010`: `HardwareVersion`, ASCII 8, R.
+- `0x1400 + 0x0018`: `SoftwareVersion`, ASCII 8, R.
+
+Register-map ambiguity to verify: the map offsets advance by byte length, while
+Modbus quantity counts 16-bit register words. The implementation therefore uses
+small read quantities first and avoids broad scans until response framing is
+captured.
+
+## Candidate read-only windows
+
+Exact first single-probe candidate:
+
+- Serial: 9600 8N1 for menu `013`; for menu `001`, try only after confirming the
+  configured/default baud, likely 115200 8N1 per V1.1 source.
+- Request: slave `0x01`, FC03, start register `0x1200`, quantity `0x0001`.
+- TX hex: `01 03 12 00 00 01 81 72`.
+- Expected normal response shape: `01 03 02 <2 data bytes> <crc lo> <crc hi>`.
+- Interpreting the data as CellVol0 mV is allowed only after CRC and byte count
+  validate.
+
+Other inactive/read-only candidates for later manual testing:
+
+- `01 03 12 00 00 20 ...`: cell voltage window, quantity 32, unverified larger
+  window.
+- `01 03 12 8A 00 01 ...`: MOS temperature, quantity 1.
+- `01 03 12 90 00 0A ...`: pack voltage/current/temp/alarm window, quantity 10,
+  unverified larger window.
+- `01 03 12 A4 00 0B ...`: balancing/SOC/capacity/cycle/SOH window, quantity 11,
+  unverified larger window.
+- `01 03 14 00 00 08 ...`: manufacturer model ASCII, quantity 8.
+
+All CRC bytes must be generated by `build_modbus_read_request`; do not hand-type
+CRC values for new probes.
+
+## Inactive implementation plan
+
+- Keep `JkRs485ModbusProfile` importable from `protocols.jk_rs485_modbus`.
+- Do not return it from `protocols.get_all_profiles()`.
+- `enabled_by_default = False`.
+- Only confirmed FC03/FC04 read request building is available.
+- First profile probe is the confirmed small FC03 `0x1200` quantity 1 read.
+- Larger windows remain `unverified_read` metadata and must not be sent by scan.
+- No write/control helpers, probes, or CLI scan support.
+
+## Unknowns and risks
+
+- Exact V1.0 vs V1.1 register deltas are UNKNOWN until the official V1.0 PDF is
+  obtained or hardware captures confirm compatibility.
+- Exact baud for menu `001` is UNKNOWN for a given device.
+- Exact physical port wiring and role are UNKNOWN without model-specific docs and
+  hardware inspection.
+- Address `0` behavior is risky on UART2/master/parallel setups.
+- Some register-map areas are RW; reading them via FC03 is allowed only as a
+  read, but no writes to those addresses are allowed.
+- FC04 support is UNKNOWN for JK; it is allowed only as a generic read-only
+  function in the builder, not as a source-confirmed JK probe.
