@@ -17,6 +17,19 @@ def test_jk_rs485_modbus_research_doc_exists_and_contains_safety_terms():
     assert "address 0" in text
     assert "0x1200" in text
     assert "01 03 12 00 00 01 81 72" in text
+    assert "Hardware confirmation" in text
+    assert "01 03 02 0C D8 BD 1E" in text
+    assert "3288 mV = 3.288 V" in text
+    assert "read_cell_voltages_0_7_addr1" in text
+    assert "01 03 12 00 00 08 41 74" in text
+    assert "read_cell_voltages_0_15_addr1" in text
+    assert "01 03 12 00 00 10 41 7E" in text
+    assert "01 03 10 0C D8 0C D7 0C D7 0C D7 0C D8 0C D7 0C D8 0C D8 72 06" in text
+    assert "01 03 20 0C D7 0C D7 0C D7 0C D7 0C D7 0C D7 0C D8 0C D7" in text
+    assert "logs/manual_tx_20260513T195227Z.json" in text
+    assert "logs/manual_tx_20260513T195405Z.json" in text
+    assert "non_trailing_zero_cell_voltage" in text
+    assert "This confirms only slave 1, FC03, register `0x1200`, quantities 1, 8, and 16." in text
 
 
 def test_confirmed_first_read_request_is_crc_valid():

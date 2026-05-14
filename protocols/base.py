@@ -14,6 +14,7 @@ class ProtocolProfile:
     probes: list[ProbeMessage]
     confidence_hint: int = 50
     enabled_by_default: bool = True
+    primary_probe_names: tuple[str, ...] = ()
 
     def split_frames(self, rx_buffer: bytes) -> list[bytes]:
         return [rx_buffer] if rx_buffer else []

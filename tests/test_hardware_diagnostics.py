@@ -143,10 +143,16 @@ def test_passive_sends_zero_writes():
     assert transport.writes == []
 
 
-def test_active_registry_contains_only_pylon_profiles():
+def test_active_registry_contains_expected_safe_read_profiles():
     assert {profile.id for profile in get_all_profiles()} == {
         "pylon_lv_rs485",
         "jk_pylon_lv_emulation",
+        "jbd_xiaoxiang_uart_rs485",
+        "daly_uart_485",
+        "jk_rs485_modbus",
+        "pace_rs485_modbus_v1_3",
+        "growatt_bms_rs485_1xsxxp",
+        "voltronic_inverter_bms_485",
     }
 
 

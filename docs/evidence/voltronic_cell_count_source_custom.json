@@ -1,0 +1,32 @@
+{
+  "profile": "voltronic_inverter_bms_485",
+  "probe": "read_cell_count_addr1",
+  "context": {
+    "bms_menu": "007 Voltronic_Inverter_and_BMS_485-...",
+    "serial": "9600 8N1",
+    "protocol_shape": "voltronic_source_custom_response"
+  },
+  "tx_hex": "01 03 00 10 00 01 85 CF",
+  "rx_hex": "01 03 00 01 00 08 15 CC",
+  "validation_reasons": [
+    "not_echo",
+    "crc_ok",
+    "slave_id_ok",
+    "function_code_ok",
+    "voltronic_custom_data_length_ok",
+    "source_response_length_ok",
+    "source_custom_response_confirmed",
+    "standard_modbus_request_shape_ambiguous"
+  ],
+  "decoded": {
+    "decode_status": "hardware_confirmed_single_register_source_custom",
+    "protocol_shape": "voltronic_source_custom_response",
+    "register_0x0010_raw": 8,
+    "cell_count": 8,
+    "warnings": [
+      "standard_modbus_request_shape_ambiguous",
+      "not_standard_modbus_response"
+    ]
+  },
+  "status": "hardware_confirmed_source_custom_single_probe"
+}

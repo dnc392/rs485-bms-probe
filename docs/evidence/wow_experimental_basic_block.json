@@ -1,0 +1,30 @@
+{
+  "profile": "wow_rs485_modbus_v1_3",
+  "probe": "experimental_read_basic_block_0x0000_0x0002_addr1",
+  "context": {
+    "bms_menu": "009 WOW_RS485_Modbus_V1.3",
+    "serial": "9600 8N1",
+    "source_confirmed": false,
+    "risk": "experimental_unverified_read"
+  },
+  "tx_hex": "01 03 00 00 00 03 05 CB",
+  "rx_hex": "01 03 06 00 00 0A 46 00 42 43 49",
+  "validation_reasons": [
+    "not_echo",
+    "crc_ok",
+    "slave_id_ok",
+    "function_code_ok",
+    "byte_count_ok"
+  ],
+  "decoded": {
+    "decode_status": "experimental_candidate_decode",
+    "semantic_confirmed": false,
+    "candidate_register_0x0000_raw": 0,
+    "candidate_register_0x0001_raw": 2630,
+    "candidate_register_0x0002_raw": 66,
+    "candidate_current_a": 0.0,
+    "candidate_pack_voltage_v": 26.3,
+    "candidate_soc_percent": 66
+  },
+  "status": "experimental_observation_only"
+}

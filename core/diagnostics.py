@@ -36,6 +36,8 @@ class TransactionEntry:
     rx_hex: str
     frames_found: int
     validation_reasons: list[str]
+    decoded: dict
+    hardware_status: list[str]
 
 
 def hex_dump(data: bytes) -> str:
@@ -43,8 +45,20 @@ def hex_dump(data: bytes) -> str:
 
 
 def ascii_preview(data: bytes, limit: int = 160) -> str:
-    text = data[:limit].decode("ascii", errors="replace")
-    text = text.replace("\\", "\\\\").replace("\r", "\\r").replace("\n", "\\n")
+    parts: list[str] = []
+    for byte in data[:limit]:
+        if byte == 0x0D:
+            parts.append("\\r")
+        elif byte == 0x0A:
+            parts.append("\\n")
+        elif byte == 0x09:
+            parts.append("\\t")
+        elif 0x20 <= byte <= 0x7E:
+            char = chr(byte)
+            parts.append("\\\\" if char == "\\" else char)
+        else:
+            parts.append(f"\\x{byte:02X}")
+    text = "".join(parts)
     if len(data) > limit:
         text += "..."
     return text
@@ -128,27 +142,38 @@ def save_raw_log(data: bytes, log_dir: Path, prefix: str = "passive") -> Path:
     return path
 
 
-def select_safe_probe(profile: ProtocolProfile, probe_name: str) -> ProbeMessage:
+def select_safe_probe(
+    profile: ProtocolProfile,
+    probe_name: str,
+    include_unverified: bool = False,
+) -> ProbeMessage:
+    profile_aliases = getattr(profile, "probe_aliases", {})
+    canonical_name = profile_aliases.get(probe_name, probe_name)
     for probe in profile.probes:
-        if probe.name != probe_name:
+        probe_names = {probe.name, *probe.aliases}
+        if probe.name != canonical_name and canonical_name not in probe_names:
             continue
-        allowed, reason = is_probe_allowed(probe, include_unverified=False)
+        allowed, reason = is_probe_allowed(probe, include_unverified=include_unverified)
         if not allowed:
             raise ValueError(f"Probe is not safe to send: {reason}")
         if probe.risk != "safe_read":
+            if include_unverified and probe.risk in {"unverified_read", "experimental_unverified_read"}:
+                return probe
             raise ValueError(f"Probe is not confirmed safe_read: {probe.risk}")
         return probe
     raise ValueError(f"Unknown probe for profile {profile.id}: {probe_name}")
 
 
-def validate_frames(
+def _validate_frames(
     profile: ProtocolProfile,
     probe: ProbeMessage,
     frames: list[bytes],
-) -> list[str]:
+) -> tuple[list[str], dict, list[str]]:
     if not frames:
-        return ["no frames found"]
+        return ["no frames found"], {}, []
     reasons: list[str] = []
+    decoded_frames: list[dict] = []
+    hardware_status: list[str] = []
     for idx, frame in enumerate(frames, start=1):
         result: ValidationResult = profile.validate_response(probe, frame)
         prefix = f"frame {idx}: "
@@ -156,6 +181,43 @@ def validate_frames(
             reasons.extend(prefix + reason for reason in result.reasons)
         else:
             reasons.append(prefix + ("ok" if result.ok else "invalid"))
+        decoded_frames.append(result.decoded)
+        if result.decoded.get("decode_status") == "hardware_confirmed_single_register":
+            hardware_status.append("confirmed_single_probe")
+        elif result.decoded.get("decode_status") == "hardware_confirmed_cell_voltage_block":
+            hardware_status.append("confirmed_cell_voltage_block")
+        elif result.decoded.get("decode_status") == "hardware_confirmed_pack_voltage":
+            hardware_status.append("confirmed_single_probe")
+        elif result.decoded.get("decode_status") == "hardware_bulk_core_block":
+            hardware_status.append("confirmed_bulk_core_block")
+        elif result.decoded.get("decode_status") == "hardware_basic_block":
+            hardware_status.append("confirmed_basic_block")
+        elif result.decoded.get("decode_status") == "hardware_confirmed_status_block":
+            hardware_status.append("confirmed_status_block")
+        elif result.decoded.get("decode_status") == "hardware_cell_voltage_block":
+            hardware_status.append("confirmed_cell_voltage_block")
+        elif result.decoded.get("decode_status") == "frame_valid_semantics_untrusted":
+            hardware_status.append("confirmed_modbus_frame_semantics_untrusted")
+        elif result.decoded.get("decode_status") == "frame_valid_semantics_suspicious":
+            hardware_status.append("confirmed_modbus_frame_semantics_suspicious")
+        elif result.decoded.get("classification") == "experimental_modbus_response_valid":
+            hardware_status.append("experimental_modbus_response_valid")
+        elif result.decoded.get("classification") == "experimental_modbus_exception":
+            hardware_status.append("experimental_modbus_exception")
+
+    if len(decoded_frames) == 1:
+        decoded: dict = decoded_frames[0]
+    else:
+        decoded = {"frames": decoded_frames}
+    return reasons, decoded, hardware_status
+
+
+def validate_frames(
+    profile: ProtocolProfile,
+    probe: ProbeMessage,
+    frames: list[bytes],
+) -> list[str]:
+    reasons, _, _ = _validate_frames(profile, probe, frames)
     return reasons
 
 
@@ -183,6 +245,7 @@ def run_single_probe_transaction(
             transport.write(probe.tx)
             rx = transport.read_for(timeout_ms)
             frames = profile.split_frames(rx)
+            validation_reasons, decoded, hardware_status = _validate_frames(profile, probe, frames)
             entries.append(
                 TransactionEntry(
                     attempt=attempt,
@@ -192,7 +255,9 @@ def run_single_probe_transaction(
                     rx_ascii_preview=ascii_preview(rx),
                     rx_hex=hex_dump(rx),
                     frames_found=len(frames),
-                    validation_reasons=validate_frames(profile, probe, frames),
+                    validation_reasons=validation_reasons,
+                    decoded=decoded,
+                    hardware_status=hardware_status,
                 )
             )
             if attempt < repeat and delay_ms:
@@ -227,6 +292,8 @@ def run_manual_transaction(
         rx_hex=hex_dump(rx),
         frames_found=len(frames),
         validation_reasons=["manual mode: profile validation bypassed"],
+        decoded={},
+        hardware_status=[],
     )
 
 

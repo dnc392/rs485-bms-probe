@@ -1,18 +1,11 @@
-# SAFETY model
+# Safety Policy
 
-This project is a **read-only protocol probe**.
+See [docs/SAFETY.md](docs/SAFETY.md) for the full policy.
 
-## Enforcement rules
+Summary:
 
-1. `write_forbidden` probes are **always blocked**.
-2. Risks outside the allow-list (`safe_read`, `unverified_read`) are blocked as unknown.
-3. `unverified_read` probes are blocked unless `--include-unverified` is set.
-4. Scanner output records each skipped probe and the exact blocking reason.
-
-## Defense-in-depth
-
-- Name-based blocklist denies common write/control keywords.
-- Risk-based policy denies anything not explicitly allowed.
-- Scanner logs both warnings and structured `skipped_probes` entries.
-
-No write/control commands are supported in autodetect mode.
+- Default profiles are read-only.
+- Write/control/config/factory/update/reset/unlock/calibration/MOS commands are blocked.
+- Experimental reads require explicit `--include-unverified`.
+- Experimental profiles do not participate in `--scan`.
+- Manual `--tx-hex` bypasses profile validation and should only be used for reviewed read-only frames.

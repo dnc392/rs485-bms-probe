@@ -1,0 +1,26 @@
+{
+  "profile": "jk_rs485_modbus",
+  "probe": "read_cell_voltages_0_7_addr1",
+  "context": {
+    "bms_menu": "013 (9600) JK BMS RS485 Modbus V1.0",
+    "serial": "9600 8N1"
+  },
+  "tx_hex": "01 03 12 00 00 08 41 74",
+  "rx_hex": "01 03 10 0C D8 0C D7 0C D7 0C D7 0C D8 0C D7 0C D8 0C D8 72 06",
+  "validation_reasons": [
+    "not_echo",
+    "crc_ok",
+    "slave_id_ok",
+    "function_code_ok",
+    "byte_count_ok"
+  ],
+  "decoded": {
+    "decode_status": "hardware_confirmed_cell_voltage_block",
+    "cell_voltages_mv": [3288, 3287, 3287, 3287, 3288, 3287, 3288, 3288],
+    "active_cell_count": 8,
+    "min_cell_mv": 3287,
+    "max_cell_mv": 3288,
+    "delta_cell_mv": 1
+  },
+  "status": "hardware_confirmed_bounded_read"
+}

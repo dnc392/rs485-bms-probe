@@ -289,6 +289,7 @@ class PylonLvProfile(ProtocolProfile):
                 _probe("read_charge_discharge_management", "~201246630000FDA8\r"),
             ],
             confidence_hint=95,
+            primary_probe_names=("read_system_analog_data",),
         )
 
     def split_frames(self, rx_buffer: bytes) -> list[bytes]:

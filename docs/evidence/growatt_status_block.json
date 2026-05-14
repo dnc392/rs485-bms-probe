@@ -1,0 +1,27 @@
+{
+  "profile": "growatt_bms_rs485_1xsxxp",
+  "probe": "read_status_block_0x0013_0x0018_addr1",
+  "context": {
+    "bms_menu": "006 Growatt_BMS_RS485_Protocol_1x...",
+    "serial": "9600 8N1"
+  },
+  "tx_hex": "01 03 00 13 00 06 34 0D",
+  "rx_hex": "01 03 0C 04 69 00 00 00 42 0A 47 00 00 00 14 64 8C",
+  "validation_reasons": [
+    "not_echo",
+    "crc_ok",
+    "slave_id_ok",
+    "function_code_ok",
+    "byte_count_ok"
+  ],
+  "decoded": {
+    "decode_status": "hardware_confirmed_status_block",
+    "status_raw": 1129,
+    "error_raw": 0,
+    "soc_percent": 66,
+    "pack_voltage_v": 26.31,
+    "current_a": 0.0,
+    "temperature_c": 20
+  },
+  "status": "hardware_confirmed_status_block"
+}

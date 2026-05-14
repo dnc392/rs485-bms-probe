@@ -1,0 +1,24 @@
+protocol: jbd_xiaoxiang_uart_rs485
+status: active_safe_read
+confidence: medium_high
+frames:
+  - id: read_basic_info
+    tx_hex: "DD A5 03 00 FF FD 77"
+    expected_prefix_hex: "DD 03"
+    risk: safe_read
+    source_status: confirmed_by_public_sources
+  - id: read_cell_voltages
+    tx_hex: "DD A5 04 00 FF FC 77"
+    expected_prefix_hex: "DD 04"
+    risk: safe_read
+    source_status: confirmed_by_public_sources
+blocked:
+  - write
+  - eeprom_write
+  - factory
+  - mos_control
+  - capacity_reset
+  - calibration
+notes:
+  - "Parser intentionally raw-only until hardware captures are collected."
+  - "No write/control frames are active."

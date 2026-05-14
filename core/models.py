@@ -21,6 +21,17 @@ class ProbeMessage:
     timeout_ms: int
     risk: str
     description: str = ""
+    slave_id: int | None = None
+    function_code: int | None = None
+    start_register: int | None = None
+    quantity: int | None = None
+    primary: bool = False
+    hardware_confirmed: bool = False
+    aliases: tuple[str, ...] = ()
+
+    @property
+    def request_hex(self) -> str:
+        return self.tx.hex(" ").upper()
 
 
 @dataclass

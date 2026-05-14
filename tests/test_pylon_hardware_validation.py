@@ -131,7 +131,7 @@ def test_exact_echo_fails_with_strong_negative_score():
     assert "echoed_request" in result.reasons
 
 
-def test_scan_score_is_capped_but_raw_score_remains_cumulative():
+def test_scan_score_uses_best_valid_probe_not_cumulative_sum():
     profile = PylonLvProfile()
     transport = FakeSerialTransport(
         responses=[
@@ -143,8 +143,8 @@ def test_scan_score_is_capped_but_raw_score_remains_cumulative():
 
     result = run_active_probe(transport, "FAKE0", profile)
 
-    assert result.score == 100
-    assert result.raw_score == 210
+    assert result.score == 80
+    assert result.raw_score == 70
     assert result.status == "detected"
 
 
@@ -168,11 +168,17 @@ def test_scan_cli_prints_score_and_raw_score(monkeypatch, capsys, tmp_path: Path
 
     out = capsys.readouterr().out
     assert code == 0
-    assert "pylon_lv_rs485: score=100 raw_score=210 status=detected" in out
+    assert "pylon_lv_rs485: score=80 raw_score=70 status=detected" in out
 
 
-def test_active_registry_contains_only_pylon_profiles_for_hardware_validation():
+def test_active_registry_contains_expected_safe_read_profiles_for_hardware_validation():
     assert {profile.id for profile in get_all_profiles()} == {
         "pylon_lv_rs485",
         "jk_pylon_lv_emulation",
+        "jbd_xiaoxiang_uart_rs485",
+        "daly_uart_485",
+        "jk_rs485_modbus",
+        "pace_rs485_modbus_v1_3",
+        "growatt_bms_rs485_1xsxxp",
+        "voltronic_inverter_bms_485",
     }

@@ -20,7 +20,7 @@ from core.diagnostics import (
 from core.models import SerialSettings
 from core.report import save_json, save_raw, save_txt
 from core.scanner import run_active_probe
-from protocols import get_all_profiles
+from protocols import get_profiles
 from transport.port_list import list_serial_ports
 from transport.serial_transport import SerialPortError, SerialTransport
 
@@ -30,8 +30,8 @@ REPORTS_DIR = BASE_DIR / "reports"
 LOGS_DIR = BASE_DIR / "logs"
 
 
-def profiles_map():
-    return {p.id: p for p in get_all_profiles()}
+def profiles_map(include_unverified: bool = False):
+    return {p.id: p for p in get_profiles(include_unverified=include_unverified)}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -88,6 +88,16 @@ def _print_transaction_entry(entry) -> None:
     print("Validation reasons:")
     for reason in entry.validation_reasons:
         print(f"- {reason}")
+    if entry.decoded and entry.decoded.get("decode_status"):
+        print("Decoded:")
+        for key, value in entry.decoded.items():
+            if key == "raw_hex":
+                continue
+            print(f"- {key}: {value}")
+    if entry.hardware_status:
+        print("Hardware status:")
+        for item in entry.hardware_status:
+            print(f"- {item}")
 
 
 def _print_passive(data: bytes, raw_log_path: Path) -> None:
@@ -162,7 +172,7 @@ def run_cli(
 ) -> int:
     if log_dir is None:
         log_dir = LOGS_DIR
-    pmap = profiles_map()
+    pmap = profiles_map(include_unverified=args.include_unverified)
     if args.list_ports:
         print("\n".join(list_ports_func()))
         return 0
@@ -202,7 +212,17 @@ def run_cli(
         if args.profile not in pmap:
             raise ValueError(f"Invalid profile id: {args.profile}")
         profile = pmap[args.profile]
-        probe = select_safe_probe(profile, args.probe)
+        probe = select_safe_probe(profile, args.probe, include_unverified=args.include_unverified)
+        if probe.risk == "experimental_unverified_read":
+            if "cell_voltage" in probe.name or "cell_voltages" in probe.name:
+                request_kind = "cell-voltage block request"
+            else:
+                request_kind = "block request" if (probe.quantity or 0) > 1 else "request"
+            print("WARNING:")
+            print(f"This is an experimental unverified read-only FC03 {request_kind}.")
+            print("It is not source-confirmed.")
+            print(f"BMS menu must be set to {getattr(profile, 'bms_menu', profile.id)}.")
+            print("No scan will be run.")
         entries = run_single_probe_transaction(
             transport=transport_factory(),
             port=args.port,
