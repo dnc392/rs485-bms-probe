@@ -1,8 +1,9 @@
 # Support Matrix
 
-This matrix describes current repository support. It does not imply full protocol support.
+This matrix describes current repository support. It does not imply complete
+protocol-map coverage.
 
-| Profile | Menu/protocol | Enabled by default | Risk class | Source confirmed | Hardware confirmed | Decode status | Notes |
+| Profile ID | Protocol/menu | Enabled by default | Risk class | Source status | Hardware status | Decode status | Notes |
 |---|---|---:|---|---|---|---|---|
 | `pylon_lv_rs485` | Pylontech / Pylon LV RS485 ASCII | yes | `safe_read` | yes | fixture/capture backed | minimal confirmed Pylon fields | Existing production target for Pylon-style ASCII reads. |
 | `jk_pylon_lv_emulation` | JK BMS Pylon LV emulation / menu 014 | yes | `safe_read` | protocol-compatible behavior | fixture/capture backed | Pylon-compatible fields | Separate from `jk_rs485_modbus`. |
@@ -12,7 +13,7 @@ This matrix describes current repository support. It does not imply full protoco
 | `pace_rs485_modbus_v1_3` | `004 PACE_RS485_Modbus_V1.3` | yes | `safe_read` | source-confirmed PDF | hardware confirmed basic block | basic decode; cell semantics untrusted | Large core block returned exception `0x02`; no wide map claim. |
 | `growatt_bms_rs485_1xsxxp` | `006 Growatt_BMS_RS485_Protocol_1x...` | yes | `safe_read` | source-confirmed PDF | hardware confirmed status block | status decode; cell semantics suspicious | Cell frames valid but not semantically trusted. |
 | `voltronic_inverter_bms_485` | `007 Voltronic_Inverter_and_BMS_485-...` | yes | `safe_read` | source-confirmed DOCX | hardware confirmed single probe | source-custom cell-count decode | Not standard Modbus response shape. |
-| `wow_rs485_modbus_v1_3` | `009 WOW_RS485_Modbus_V1.3` | no | `experimental_unverified_read` | no | experimental observations only | candidate-only; cell block semantic failed | Hidden by default; available only with `--include-unverified`; scan-blocked. |
+| `wow_rs485_modbus_v1_3` | `009 WOW_RS485_Modbus_V1.3` | no | `experimental_unverified_read` | `source_confirmed=false` | experimental observations only | candidate-only; cell block semantic failed | Not active safe-read; hidden by default; available only with `--include-unverified`; scan-blocked. |
 
 ## Status Vocabulary
 

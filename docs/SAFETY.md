@@ -23,6 +23,7 @@ The following command types and risk tokens must not be active probes:
 - config
 - factory
 - firmware update
+- firmware_update
 - reset
 - unlock
 - calibration
@@ -37,6 +38,7 @@ The following command types and risk tokens must not be active probes:
 - Is not active by default.
 - Must be documented and tested.
 - Must not be promoted to `safe_read` without a protocol source and hardware evidence.
+- Must keep `source_confirmed=false` unless a real source is found and reviewed.
 
 ## Hardware Testing Checklist
 

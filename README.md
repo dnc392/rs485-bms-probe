@@ -1,7 +1,11 @@
-# RS485forBMS_MVP
+# rs485-bms-probe
 
-Read-only BMS protocol probe tool for RS485/UART-style battery protocols.
+Read-only RS485 BMS protocol probe tool.
 It is designed for safe protocol identification and bounded read-only validation.
+
+> This tool is read-only by design. It must not be used for
+> write/config/factory/update commands. Experimental probes require explicit
+> opt-in and are excluded from default scans.
 
 ## What This Is
 
@@ -15,8 +19,8 @@ It is designed for safe protocol identification and bounded read-only validation
 - Not a BMS flasher.
 - Not a brute-force scanner.
 - Not a write/config tool.
-- Not a universal full decoder.
-- Not production-certified equipment.
+- Not a complete decoder.
+- Not certified for production use.
 - Not safe for arbitrary unknown devices without protocol review.
 
 ## Safety Model
@@ -68,7 +72,7 @@ Development tools:
 .\.venv\Scripts\bms-probe.exe --list-profiles
 .\.venv\Scripts\bms-probe.exe --list-profiles --include-unverified
 .\.venv\Scripts\bms-probe.exe --list-ports
-.\.venv\Scripts\bms-probe.exe --doctor --port COM3 --baud 9600 --parity N --stopbits 1
+.\.venv\Scripts\bms-probe.exe --doctor --port COMx --baud 9600 --parity N --stopbits 1
 ```
 
 ## Single Probe Example
@@ -76,16 +80,17 @@ Development tools:
 JK RS485 Modbus confirmed single-register read:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --single-probe --profile jk_rs485_modbus --probe read_cell_voltage_0_addr1 --port COM3 --baud 9600 --parity N --stopbits 1
+.\.venv\Scripts\bms-probe.exe --single-probe --profile jk_rs485_modbus --probe read_cell_voltage_0_addr1 --port COMx --baud 9600 --parity N --stopbits 1
 ```
 
 WOW remains experimental-only:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --single-probe --profile wow_rs485_modbus_v1_3 --probe experimental_read_basic_block_0x0000_0x0002_addr1 --port COM3 --baud 9600 --parity N --stopbits 1 --include-unverified
+.\.venv\Scripts\bms-probe.exe --single-probe --profile wow_rs485_modbus_v1_3 --probe experimental_read_basic_block_0x0000_0x0002_addr1 --port COMx --baud 9600 --parity N --stopbits 1 --include-unverified
 ```
 
-Do not run experimental probes without reviewing the protocol note first.
+Replace `COMx` with the selected local serial port before running a hardware
+probe. Do not run experimental probes without reviewing the protocol note first.
 
 ## Logs
 
@@ -104,7 +109,9 @@ git diff --check
 
 ## Project Status
 
-MVP / research tool / read-only. It is useful for controlled protocol validation, but it is not full protocol support and is not production-certified.
+MVP / research tool / read-only. It is useful for controlled protocol
+validation, but it does not implement complete protocol maps and is not
+certified for production use.
 
 ## License
 

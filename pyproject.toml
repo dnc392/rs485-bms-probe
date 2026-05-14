@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bms-probe"
 version = "0.1.1"
-description = "Read-only RS485/UART BMS protocol probe MVP"
+description = "Read-only RS485 BMS protocol probe tool with safety gates, JSON transaction logs, and hardware evidence"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["pyserial>=3.5"]

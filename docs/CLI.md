@@ -30,7 +30,7 @@ It does not make experimental probes participate in `--scan`.
 Run one reviewed probe:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --single-probe --profile jk_rs485_modbus --probe read_cell_voltage_0_addr1 --port COM3 --baud 9600 --parity N --stopbits 1
+.\.venv\Scripts\bms-probe.exe --single-probe --profile jk_rs485_modbus --probe read_cell_voltage_0_addr1 --port COMx --baud 9600 --parity N --stopbits 1
 ```
 
 ## Scan Safety Note
@@ -43,7 +43,7 @@ Experimental probes are blocked from scan even when `--include-unverified` is pr
 Manual mode bypasses profile validation:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --port COM3 --baud 9600 --parity N --stopbits 1 --tx-hex "..."
+.\.venv\Scripts\bms-probe.exe --port COMx --baud 9600 --parity N --stopbits 1 --tx-hex "..."
 ```
 
 Use manual TX only for already reviewed read-only frames.
@@ -58,25 +58,25 @@ The JSON log is the source of truth for TX/RX, validation reasons, decoded value
 JK RS485 Modbus:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --single-probe --profile jk_rs485_modbus --probe read_cell_voltage_0_addr1 --port COM3 --baud 9600 --parity N --stopbits 1
+.\.venv\Scripts\bms-probe.exe --single-probe --profile jk_rs485_modbus --probe read_cell_voltage_0_addr1 --port COMx --baud 9600 --parity N --stopbits 1
 ```
 
 PACE basic block:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --single-probe --profile pace_rs485_modbus_v1_3 --probe read_basic_block_0_2_addr1 --port COM3 --baud 9600 --parity N --stopbits 1
+.\.venv\Scripts\bms-probe.exe --single-probe --profile pace_rs485_modbus_v1_3 --probe read_basic_block_0_2_addr1 --port COMx --baud 9600 --parity N --stopbits 1
 ```
 
 Growatt status block:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --single-probe --profile growatt_bms_rs485_1xsxxp --probe read_status_block_0x0013_0x0018_addr1 --port COM3 --baud 9600 --parity N --stopbits 1
+.\.venv\Scripts\bms-probe.exe --single-probe --profile growatt_bms_rs485_1xsxxp --probe read_status_block_0x0013_0x0018_addr1 --port COMx --baud 9600 --parity N --stopbits 1
 ```
 
 Voltronic source-custom cell count:
 
 ```powershell
-.\.venv\Scripts\bms-probe.exe --single-probe --profile voltronic_inverter_bms_485 --probe read_cell_count_addr1 --port COM3 --baud 9600 --parity N --stopbits 1
+.\.venv\Scripts\bms-probe.exe --single-probe --profile voltronic_inverter_bms_485 --probe read_cell_count_addr1 --port COMx --baud 9600 --parity N --stopbits 1
 ```
 
 WOW experimental only:
@@ -84,3 +84,6 @@ WOW experimental only:
 ```powershell
 .\.venv\Scripts\bms-probe.exe --single-probe --profile wow_rs485_modbus_v1_3 --probe experimental_read_basic_block_0x0000_0x0002_addr1 --port COM3 --baud 9600 --parity N --stopbits 1 --include-unverified
 ```
+
+This WOW command is not source-confirmed and is not part of default scans.
+Replace `COM3` with the selected local serial port.

@@ -16,6 +16,7 @@ reports/
 captures/
 *.log
 *.tmp
+*.bak
 
 .env
 .env.*
