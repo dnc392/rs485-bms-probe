@@ -3,9 +3,11 @@
 Read-only RS485 BMS protocol probe tool.
 It is designed for safe protocol identification and bounded read-only validation.
 
-> This tool is read-only by design. It must not be used for
-> write/config/factory/update commands. Experimental probes require explicit
-> opt-in and are excluded from default scans.
+> [!WARNING]
+> This is a research tool for controlled read-only BMS protocol probing.
+> Default profiles are read-only. Experimental probes require explicit opt-in
+> and are excluded from default scans.
+> Do not use this project for write/config/factory/update commands.
 
 ## What This Is
 
@@ -115,4 +117,4 @@ certified for production use.
 
 ## License
 
-No license selected yet. All rights reserved by default until a `LICENSE` file is added.
+MIT License. See [LICENSE](LICENSE).
